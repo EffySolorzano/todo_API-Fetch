@@ -120,18 +120,18 @@ export const ToDo = () => {
                                     handleDeleteTask(index);
                                 }}
                             >
-                                Eliminar
+                                Delete
                             </button>
                         </li>
                     ))}
                 </ul>
             ) : (
                 
-                <p> No task to show </p>
+                <p> No tasks to show </p>
             )}
             <br />
             
-            <button className="btn btn-danger" onClick={handleDeleteAll}>Eliminar todas las tareas</button>
+            <button className="btn btn-danger" onClick={handleDeleteAll}>Delete all tasks</button>
         </div>
     );
  }      

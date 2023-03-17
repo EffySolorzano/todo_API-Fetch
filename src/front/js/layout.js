@@ -28,8 +28,8 @@ const Layout = () => {
                     <Navbar />
                     <Routes>
                         {/* <Route element={<Home />} path="/" /> */}
-                        {/* <Route element={<ToDo />} path="/" /> */}
-                        <Route element={<StarWars />} path="/" />
+                        {<Route element={<ToDo />} path="/" />}
+                        {/*<Route element={<StarWars />} path="/" />*/}
                         <Route element={<Demo />} path="/demo" />
                         <Route element={<h1>EStoy en la vista de 4Geeks</h1>} path="/4geeks" />
                         <Route element={<Single />} path="/single/:thetitle" />

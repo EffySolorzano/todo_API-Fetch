@@ -1,3 +1,7 @@
 /* 
     General Styles used on every website (Don't Repeat Yourself)
 */
+body{
+    background-color:#6A0DAD;
+    background-image: url("https://media.istockphoto.com/id/1356164906/vector/geometric-seamless-pattern-in-80s-style-abstract-geometric-background-design-for-brochures.jpg?s=612x612&w=0&k=20&c=jnx_I1eag5ZQAsUsdgZQ0rUs-dG_ViCPufFKY103EKw=");
+}

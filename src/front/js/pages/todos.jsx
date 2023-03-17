@@ -3,56 +3,135 @@ import { Context } from "../store/appContext";
 import rigoImageUrl from "../../img/rigo-baby.jpg";
 import "../../styles/home.css";
 
-export const ToDo = () => {//Esta es la versión con estados centralizados, la razón de usar estados centralizados es poder comunicar estados entre componentes
+export const ToDo = () => {
     const { store, actions } = useContext(Context);
-    const [refresh, setRefresh] = useState(false) //estado del compoenente para controlar su reenderizado
-
+    const [refresh, setRefresh] = useState(false);
+    const [tasksToDelete, setTasksToDelete] = useState([]);
+    const [newTaskLabel, setNewTaskLabel] = useState("");
+  
     useEffect(() => {
-        //ejecutamos una función asíncrona que traerá la información de la lista de To Do
-        const cargaDatos = async () => {
-            actions.getToDoList()
+      const cargaDatos = async () => {
+        let { respuestaJson, response } = await actions.useFetch(
+          "/apis/fake/todos/user/stephtest"
+        );
+        if (response.ok) {
+          actions.setTodoList(respuestaJson);
+        } else {
+          actions.setTodoList([]);
         }
-        cargaDatos()
-        let limpiar = document.querySelector("#tarea")
-        limpiar.value = ""
-    }, [store.user, refresh]) //El componente se renderizará la primera vez y cada vez que el estado user o refresh cambien
-
-    useEffect(() => { console.log(store.todoList) }, [store.todoList])
-
+      };
+      cargaDatos();
+    }, [store.user, refresh]);
+  
+    const handleDeleteAll = async () => {
+      const deleteOptions = {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([]),
+      };
+      const deleteResponse = await fetch(
+        "/apis/fake/todos/user/stephtest",
+        deleteOptions
+      );
+  
+      if (deleteResponse.ok) {
+        const putOptions = {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify([{ label: "Add New ToDos", done: false }]),
+        };
+        const putResponse = await fetch(
+          "/apis/fake/todos/user/stephtest",
+          putOptions
+        );
+  
+        if (putResponse.ok) {
+          actions.setTodoList([{ label: "Add New ToDos", done: false }]);
+          setRefresh(!refresh);
+        } else {
+          alert("There was an error, try again");
+        }
+      } else {
+        alert("There was an error, try again");
+      }
+    };
+  
+    const handleAddTask = async (e) => {
+        if (e.key === "Enter") {
+          const newTask = {
+            label: inputValue,
+            done: false,
+          };
+          const { respuestaJson, response } = await actions.useFetch(
+            `/apis/fake/todos/user/${store.user}`,
+            [newTask],
+            "POST"
+          );
+          if (response.ok) {
+            setInputValue("");
+            setRefresh(!refresh);
+          } else {
+            alert("There was an error, try again");
+          }
+        }
+      };
+  
+    const handleDeleteTask = async (index) => {
+      const newTaskList = store.todoList.filter((_, i) => i !== index);
+      setTasksToDelete([...tasksToDelete, store.todoList[index]]);
+      let { respuestaJson, response } = await actions.useFetch(
+        `/apis/fake/todos/user/${store.user}`,
+        newTaskList,
+        "PUT"
+      );
+  
+      if (response.ok) {
+        actions.setTodoList(newTaskList);
+        setRefresh(!refresh);
+      } else {
+        alert("There was an error, try again");
+      }
+    };
+  
     return (
         <div className="text-center mt-5">
-            Lista de Tareas
+            <h1>What do you need to do</h1>
             <br />
-            <input placeholder="username" onChange={(e) => { actions.userToDo(e.target.value) }}></input>
-            <br></br>
-            <input placeholder="agrear nueva tarea a la lista" id="tarea"
-                onKeyUp={async (e) => {
-                    if (e.key == "Enter") {
-                        console.log("tarea", e.target.value)
-                        let resultado = await actions.agregarToDo(e.target.value)
-                        if (resultado) {
-                            setRefresh(!refresh)
-                            e.target.value = "" //restauro el valor a vacío
-                        }
-                    }
-                }}>
-            </input>
+            <input
+            className="text"
+               onChange={(e) => setNewTaskLabel(e.target.value)}
+               value={newTaskLabel}
+               onKeyPress={handleAddTask}
+               placeholder="Add a new task"
+            />
             <br />
-            {store.todoList && store.todoList.length > 0 ? //Verifico el estado
-                <ul>{store.todoList.map((item, index) => { //Hago un map del estado y muestro los to do si existen
-                    return <li key={index}>
-                        {item.label}
-                        <button type="button"    //Agrego un botón para eliminar el todo
-                            onClick={() => {
-                                actions.eliminarToDo(index)	//este botón ejecuta esta acción y le pasamos el índice
-                            }}>
-                            Eliminar
-                        </button>
-                    </li>
-                })}</ul>
-                :
-                <>No hay tareas por hacer o no existe el usuario, presione la tecla ENTER en el input de tareas para crear el usuario</>
-            }
+            {store.todoList && store.todoList.length > 0 ? (
+                <ul>
+                    {store.todoList.map((item, index) => (
+                        <li key={index}>
+                            {item.label}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    handleDeleteTask(index);
+                                }}
+                            >
+                                Eliminar
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                
+                <p> No task to show </p>
+            )}
+            <br />
+            
+            <button className="btn btn-danger" onClick={handleDeleteAll}>Eliminar todas las tareas</button>
         </div>
     );
-};
+ }      

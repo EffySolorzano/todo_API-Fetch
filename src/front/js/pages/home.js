@@ -3,65 +3,119 @@ import { Context } from "../store/appContext";
 import rigoImageUrl from "../../img/rigo-baby.jpg";
 import "../../styles/home.css";
 
-export const Home = () => {//Esta es la versión con estados dentro del componente
-	const { store, actions } = useContext(Context);
-	const [todos, setTodos] = useState([]); 	//[{},{},{}] estructura de la lista de tareas
-	const [user, setUser] = useState("") // es el nombre del usuario propetario de la lista de To Do
+export const Home = () => {
+  const { store, actions } = useContext(Context);
 
-	useEffect(() => {
-		//creamos una función asíncrona que traerá la información de la lista de To Do
-		const cargaDeDatos = async () => {
-			let { respuestaJson, response } = await actions.useFetch(`/todos/user/${user}`)
-			if (response.ok) {
-				setTodos(respuestaJson)
-			}
-		}
-		cargaDeDatos() //No olvidemos llamar a la función para que se ejecute
+  // Los estados no deben estar dentro de llaves, si no dentro de paréntesis rectos, solo el store va en llaves
+  const [todos, setTodos] = useState([]);
+  const [user, setUser] = useState("");
 
-	}, [user]) //El componente se renderizará la primera vez y cada vez que el estado user cambie
+  //added an array with colors to loop as tasks are being added.
+  const bgColors = ["#FF69B4", "#40E0D0", "#FEFF38", "#FE18D3", "#39FF14"];
 
-	useEffect(() => { console.log(todos) }, [todos])
-	//useEffect(() => { console.log(user) }, [user])
+  useEffect(() => {
+    const cargaDeDatos = async () => {
+      let { respuestaJson, response } = await actions.useFetch(
+        `/todos/user/${user}`
+      );
+      if (response.ok) {
+        setTodos(respuestaJson);
+      }
+    };
+    cargaDeDatos();
+  }, [user]);
 
-	const eliminar = async (i) => {//Función para eliminar
-		let arrTemp = todos.filter((item, index) => { return index != i })
+  useEffect(() => {}, [todos]);
 
-		//Ahora envío la petición con la lista de To Do modificada, y espero la respuesta del servidor
-		let { respuestaJson, response } = await actions.useFetch(`/todos/user/${user}`, arrTemp, "PUT")
+  const eliminar = async (i) => {
+    let arrTemp = todos.filter((item, index) => {
+      return index != i;
+    });
+    let { respuestaJson, response } = await actions.useFetch(
+      `/todos/user/${user}`,
+      arrTemp,
+      "PUT"
+    );
 
-		if (response.ok) {//Si la respuesta es positiva entonces se modificó en el backend
-			console.log(response)
-			setTodos(arrTemp) //reenderizando el componente con lo que está efectivamente en backend
-		} else {
-			alert("No se actualizó o no hubo conexión con la API")
-		}
+    if (response.ok) {
+      setTodos(arrTemp);
+    } else {
+      alert("No se actualizó la API");
+    }
+  };
 
-	}
-
-
-	return (
-		<div className="text-center mt-5">
-			Lista de Tareas
-			<br />
-			<input placeholder="username" onChange={(e) => { setUser(e.target.value) }}></input>
-			<br></br>
-			<input placeholder="agrear nueva tarea a la lista" onChange={(e) => { }}></input>
-			<br />
-			{todos && todos.length > 0 ? //Verifico el estado
-				<ol>{todos.map((item, index) => { //Hago un map del estado y muestro los to do si existen
-					return <li key={index}>
-						{item.label}
-						<button type="button"    //Agrego un botón para eliminar el todo
-							onClick={() => {
-								eliminar(index)	//este botón ejecuta esta acción y le pasamos el índice
-							}}>
-							Eliminar
-						</button>
-					</li>
-				})}</ol>
-				:
-				<>No hay tareas por hacer</>
-			}
-		</div>
-	);
+  return (
+    <>
+      <h1 className="title row d-flex justify-content-center">
+        What do you want to do?
+      </h1>
+      <div className="container">
+        <div
+          className="container-fluid justify-content-center align-item-center mt-10"
+          id="bar"
+        >
+          <br />
+          <div className="row d-flex justify-content-center">
+            <div className="d-flex flex-column align-items-center">
+              <input
+                className="pending form-control"
+                placeholder="Username"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setUser(e.target.value);
+                  }
+                }}
+              />
+              <input
+                type="text"
+                className="pending form-control"
+                name="search"
+                placeholder="What needs to be done?"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.persist();
+                    setTodos((current) => [
+                      ...current,
+                      { label: e.target.value, done: false },
+                    ]);
+                  }
+                }}
+              />
+            </div>
+            <div
+              className="row d-flex justify-content-center task-list"
+              id="bar"
+            >
+              {todos && todos.length > 0 ? (
+                todos.map((item, index) => {
+                  const colorIndex = index % bgColors.length;
+                  const style = { backgroundColor: bgColors[colorIndex] };
+                  return (
+                    <li
+                      key={index}
+                      className={`task-item task-${colorIndex}`}
+                      style={style}
+                    >
+                      {item.label}
+                      <button
+                        className="btn btn-danger"
+                        type="button"
+                        onClick={() => {
+                          eliminar(index);
+                        }}
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    </li>
+                  );
+                })
+              ) : (
+                <p className="text-center">No pending tasks</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 };

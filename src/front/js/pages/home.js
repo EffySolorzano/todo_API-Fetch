@@ -82,10 +82,7 @@ export const Home = () => {
                 }}
               />
             </div>
-            <div
-              className="row d-flex justify-content-center task-list"
-              id="bar"
-            >
+            <div className="row d-flex justify-content-center task-list">
               {todos && todos.length > 0 ? (
                 todos.map((item, index) => {
                   const colorIndex = index % bgColors.length;
